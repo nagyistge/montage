@@ -3,7 +3,8 @@ var Montage = require("../core").Montage,
     ObjectDescriptorModule = require("./object-descriptor"),
     deprecate = require("../deprecate"),
     application = require("../application").application;
-    var _group = null;
+
+var _group = null;
 
 /**
  * @class Model

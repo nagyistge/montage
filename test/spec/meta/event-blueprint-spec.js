@@ -8,9 +8,8 @@ describe("meta/event-blueprint-spec", function () {
 
     describe("EventBlueprint", function () {
 
-        var blueprint, eventBlueprint;
+        var eventBlueprint;
         beforeEach(function () {
-            blueprint = new Blueprint().initWithName("testBlueprint");
             eventBlueprint = new EventDescriptor().initWithNameAndObjectDescriptor("event", blueprint);
         });
 
@@ -43,21 +42,17 @@ describe("meta/event-blueprint-spec", function () {
                     "root": {
                         "prototype": "montage/core/meta/event-blueprint",
                         "values": {
-                            "name": "event",
-                            "blueprint": {"@": "blueprint_testblueprint"}
+                            "name": "event"
                         }
-                    },
-                    "blueprint_testblueprint": {}
+                    }
                 };
                 objectDescriptorSerialization = {
                     "root": {
                         "prototype": "montage/core/meta/event-descriptor",
                         "values": {
-                            "name": "event",
-                            "objectDescriptor": {"@": "objectDescriptor_testblueprint"}
+                            "name": "event"
                         }
-                    },
-                    "objectDescriptor_testblueprint": {}
+                    }
                 };
                 serializer = new Serializer().initWithRequire(require);
                 serializer.setSerializationIndentation(4);
@@ -76,7 +71,7 @@ describe("meta/event-blueprint-spec", function () {
 
             xit("should deserialize correctly", function (done) {
                 var deserializer = new Deserializer().init(JSON.stringify(blueprintSerialization), require);
-                deserializer.deserializeObject({blueprint_testblueprint: blueprint}).then(function (deserialized) {
+                deserializer.deserializeObject().then(function (deserialized) {
                     expect(deserialized).toEqual(eventBlueprint);
                 }).finally(function () {
                     done();

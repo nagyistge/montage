@@ -90,7 +90,15 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
     serializeSelf: {
         value:function (serializer) {
             serializer.setProperty("name", this.name);
-            serializer.setProperty("objectDescriptor", this._owner, "reference");
+            /*
+             * We don't serialize the 'owner' property here because the owner
+             * itself sets that property when *it* is deserialized.
+             * Also, storing a circular reference between two objects causes
+             * problems with deserializeSelf, as one of the objects will not be
+             * deserialized when the other is trying to deserialize. This means
+             * that the properties won't be available on one of the objects for
+             * the other to make decisions about.
+             */
             if (this.cardinality === Infinity) {
                 serializer.setProperty("cardinality", -1);
             } else {
@@ -117,7 +125,6 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
     deserializeSelf: {
         value:function (deserializer) {
             this._name = deserializer.getProperty("name");
-            this._owner = deserializer.getProperty("objectDescriptor") || deserializer.getProperty("blueprint");
             this.cardinality = this._getPropertyWithDefaults(deserializer, "cardinality");
             if (this.cardinality === -1) {
                 this.cardinality = Infinity;
@@ -196,10 +203,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
      */
     identifier: {
         get:function () {
-            return [
-                this.owner.identifier,
-                this.name
-            ].join("_");
+            return this.owner ? this.owner.identifier + "_" + this.name : this.name;
         }
     },
 

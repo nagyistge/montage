@@ -130,7 +130,7 @@ var ModuleObjectDescriptor = exports.ModuleObjectDescriptor = ObjectDescriptor.s
                     targetRequire = Deserializer.getModuleRequire(_require, moduleId);
                     return new Deserializer().init(JSON.stringify(object), targetRequire).deserializeObject();
                 }).then(function (objectDescriptor) {
-                    
+
                     // TODO: May want to relax this to being just an Object Descriptor
                     if (!ModuleObjectDescriptor.prototype.isPrototypeOf(objectDescriptor)) {
                         throw new Error("Object in " + moduleId + " is not a module-object-descriptor");

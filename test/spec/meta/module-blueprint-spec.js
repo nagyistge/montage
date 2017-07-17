@@ -10,8 +10,7 @@ describe("meta/module-blueprint-spec", function () {
         "blueprint_one_a": {
             "prototype": "montage/core/meta/property-blueprint",
             "values": {
-                "name": "a",
-                "blueprint": {"@": "root"}
+                "name": "a"
             }
         },
         "root": {
@@ -31,8 +30,7 @@ describe("meta/module-blueprint-spec", function () {
         "objectDescriptor_one_a": {
             "prototype": "montage/core/meta/property-descriptor",
             "values": {
-                "name": "a",
-                "objectDescriptor": {"@": "root"}
+                "name": "a"
             }
         },
         "root": {
@@ -94,7 +92,7 @@ describe("meta/module-blueprint-spec", function () {
 
         describe("getObjectDescriptorWithModuleId", function () {
             it("caches the blueprints", function (done) {
-                require.loadPackage({location: "spec/meta/blueprint/package"}).then(function (require) {                
+                require.loadPackage({location: "spec/meta/blueprint/package"}).then(function (require) {
                     return ModuleObjectDescriptor.getObjectDescriptorWithModuleId("thing.meta", require).then(function (blueprint1) {
                         return ModuleObjectDescriptor.getObjectDescriptorWithModuleId("thing.meta", require)
                         .then(function (blueprint2) {

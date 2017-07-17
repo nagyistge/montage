@@ -23,8 +23,6 @@ exports.ObjectProperty = Montage.specialize( /** @lends ObjectProperty# */ {
      * @returns itself
      */
     init: {
-        serializable: false,
-        enumerable: false,
         value: function () {
             return this;
         }

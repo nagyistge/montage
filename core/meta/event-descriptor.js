@@ -51,7 +51,6 @@ exports.EventDescriptor = Montage.specialize( /** @lends EventDescriptor# */ {
     serializeSelf: {
         value:function (serializer) {
             serializer.setProperty("name", this.name);
-            serializer.setProperty("objectDescriptor", this._owner, "reference");
             if (this.detailKeys.length > 0) {
                 this._setPropertyWithDefaults(serializer, "detailKeys", this.detailKeys);
             }
@@ -62,7 +61,6 @@ exports.EventDescriptor = Montage.specialize( /** @lends EventDescriptor# */ {
     deserializeSelf: {
         value:function (deserializer) {
             this._name = deserializer.getProperty("name");
-            this._owner = deserializer.getProperty("objectDescriptor") || deserializer.getProperty("blueprint");
             this.detailKeys = this._getPropertyWithDefaults(deserializer, "detailKeys");
             this.helpKey = this._getPropertyWithDefaults(deserializer, "helpKey");
         }
@@ -122,11 +120,8 @@ exports.EventDescriptor = Montage.specialize( /** @lends EventDescriptor# */ {
      * @default `this.name`
      */
     identifier: {
-        get:function () {
-            return [
-                this.owner.identifier,
-                this.name
-            ].join("_");
+        get: function () {
+            return this.owner ? this.owner.identifier + "_" + this.name : this.name;
         }
     },
 
