@@ -8,8 +8,9 @@ describe("meta/event-blueprint-spec", function () {
 
     describe("EventBlueprint", function () {
 
-        var eventBlueprint;
+        var blueprint, eventBlueprint;
         beforeEach(function () {
+            blueprint = new Blueprint().initWithName("testBlueprint");
             eventBlueprint = new EventDescriptor().initWithNameAndObjectDescriptor("event", blueprint);
         });
 
