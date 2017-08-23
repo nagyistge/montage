@@ -6,7 +6,7 @@ var Montage = require("../../core").Montage,
 
 var MontageDeserializer = exports.MontageDeserializer = Montage.specialize({
 
-    _serializationString: {
+    _input: {
         value: null
     },
 
@@ -22,9 +22,15 @@ var MontageDeserializer = exports.MontageDeserializer = Montage.specialize({
         }
     },
 
+    /**
+     * @param {String|Object} serialization The serialization to deserialize.
+     * May be in parsed object form or stringified json form.
+     * @param {Require} _require
+     * @param {Require} objectRequires
+     */
     init: {
-        value: function (serializationString, _require, objectRequires, locationId, moduleContexts) {
-            this._serializationString = serializationString;
+        value: function (serialization, _require, objectRequires, locationId, moduleContexts) {
+            this._input = serialization;
             this._require = _require;
             moduleContexts = moduleContexts || new Map();
             this._reviver = new MontageReviver().init(_require, objectRequires, locationId, moduleContexts);
@@ -33,33 +39,27 @@ var MontageDeserializer = exports.MontageDeserializer = Montage.specialize({
         }
     },
 
-    initWithObject: {
-        value: function (serialization, _require, objectRequires, locationId, moduleContexts) {
-            this._serializationString = JSON.stringify(serialization);
-            moduleContexts = moduleContexts || new Map();
-            this._interpreter = new MontageInterpreter().init(_require,
-                new MontageReviver().init(_require, objectRequires, locationId, moduleContexts));
-
-            return this;
-        }
-    },
-
-    initWithObjectAndRequire: {
-         value: deprecate.deprecateMethod(void 0, function (serialization, _require, objectRequires) {
-            return this.initWithObject(serialization, _require, objectRequires);
-        }, "initWithObjectAndRequire", "initWithObject")
-    },
-
+    /**
+     * @param {Object} instances Map-like object of external user objects to
+     * link against the serialization.
+     * @param {Element} element The root element to resolve element references
+     * against.
+     * @return {Promise}
+     */
     deserialize: {
         value: function (instances, element) {
-            try {
-                var serialization = JSON.parse(this._serializationString);
-                return new MontageContext()
-                    .init(serialization, this._reviver, instances, element, this._require)
-                    .getObjects();
-            } catch (ex) {
-                return this._formatSerializationSyntaxError(this._serializationString);
+            if (typeof this._input === "string") {
+                try {
+                    this._serialization = JSON.parse(this._input);
+                } catch (ex) {
+                    return this._formatSerializationSyntaxError(this._input);
+                }
+            } else {
+                this._serialization = this._input;
             }
+            return new MontageContext()
+                .init(this._serialization, this._reviver, instances, element, this._require)
+                .getObjects();
         }
     },
 
@@ -71,9 +71,12 @@ var MontageDeserializer = exports.MontageDeserializer = Montage.specialize({
         }
     },
 
+    // TODO: Returns a promise if there are modules, undefined if there aren't,
+    // and throws a sync error if there is an invalid location. Should be made
+    // more consistent
     preloadModules: {
         value: function () {
-            var serialization = JSON.parse(this._serializationString),
+            var serialization,
                 reviver = this._reviver,
                 moduleLoader = reviver.moduleLoader,
                 object,
@@ -81,6 +84,8 @@ var MontageDeserializer = exports.MontageDeserializer = Montage.specialize({
                 locationDesc,
                 module,
                 promises = [];
+
+            serialization = typeof this._input === "string" ? JSON.parse(this._input) : this._input;
 
             for (var label in serialization) {
                 if (serialization.hasOwnProperty(label)) {
@@ -156,6 +161,20 @@ var MontageDeserializer = exports.MontageDeserializer = Montage.specialize({
                 throw new Error(message);
             });
         }
+    },
+
+    // Deprecated members
+
+    initWithObject: {
+        value:  deprecate.deprecateMethod(void 0, function (serialization, _require, objectRequires, locationId, moduleContexts) {
+            return this.init(serialization, _require, objectRequires, locationId, moduleContexts);
+        }, "initWithObject", "init")
+    },
+
+    initWithObjectAndRequire: {
+         value: deprecate.deprecateMethod(void 0, function (serialization, _require, objectRequires, locationId, moduleContexts) {
+            return this.initWithObject(serialization, _require, objectRequires, locationId, moduleContexts);
+        }, "initWithObjectAndRequire", "init")
     }
 
 }, {
