@@ -5,12 +5,16 @@ var Montage = require("../../core").Montage,
     ONE_WAY = "<-",
     TWO_WAY = "<->";
 
+/**
+ * @deprecated
+ */
 var MontageInterpreter = Montage.specialize({
     _require: {value: null},
     _reviver: {value: null},
 
     init: {
         value: function (_require, reviver) {
+            console.warn("MontageInterpreter is deprecated. APIs moved to MontageDeserializer.");
             if (typeof _require !== "function") {
                 throw new Error("Function 'require' missing.");
             }
@@ -252,7 +256,7 @@ var MontageContext = Montage.specialize({
                         (ONE_WAY in value || TWO_WAY in value || ONE_ASSIGNMENT in value)) {
                         bindings[key] = value;
                         delete values[key];
-                    }   
+                    }
                 }
             }
 
