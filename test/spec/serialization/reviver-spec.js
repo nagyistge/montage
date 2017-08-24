@@ -1,7 +1,6 @@
 var Reviver = require("montage/core/serialization/deserializer/montage-reviver").MontageReviver,
-    Interpreter = require("montage/core/serialization/deserializer/montage-interpreter").MontageInterpreter,
+    Context = require("montage/core/serialization/deserializer/montage-interpreter").MontageContext,
     Promise = require("montage/core/promise").Promise;
-
 
 describe("reviver", function() {
 
@@ -127,10 +126,11 @@ describe("reviver", function() {
     });
 
     describe("custom object revivers", function() {
-        var interpreter;
+        var reviver,
+            context;
 
         beforeEach(function() {
-            interpreter = new Interpreter().init(require, new Reviver().init(require));
+            reviver = new Reviver().init(require);
         });
         afterEach(function() {
             Reviver.resetCustomObjectRevivers();
@@ -160,7 +160,8 @@ describe("reviver", function() {
                     }
                 };
 
-            interpreter.instantiate(serialization).then(function(objects) {
+            context = new Context().init(serialization, reviver);
+            context.getObjects().then(function (objects) {
                 expect(objects.main.name).toBe("a custom1 object");
             }).finally(function () {
                 done();
@@ -206,7 +207,8 @@ describe("reviver", function() {
                     }
                 };
 
-            interpreter.instantiate(serialization).then(function(objects) {
+            context = new Context().init(serialization, reviver);
+            context.getObjects().then(function(objects) {
                 expect(objects.object1.name).toBe("a custom1 object");
                 expect(objects.object2.name).toBe("a custom2 object");
             }).finally(function () {
@@ -226,7 +228,8 @@ describe("reviver", function() {
             };
 
             try {
-                interpreter.instantiate(serialization);
+                context = new Context().init(serialization, reviver);
+                context.getObjects();
                 fail('Should throw error');
             } catch (err) {
                 expect(err.message).toBe('Error deserializing {"values":{"name":"a custom1 object"}}, might need "prototype" or "object" on label "object1"');
@@ -277,7 +280,8 @@ describe("reviver", function() {
                     }
                 };
 
-            interpreter.instantiate(serialization).then(function(objects) {
+            context = new Context().init(serialization, reviver);
+            context.getObjects().then(function(objects) {
                 expect(objects.main.name).toBe(objects.one.main.name);
                 expect(objects.main.name).toBe("a custom1 object");
             }).finally(function () {

@@ -321,7 +321,7 @@ var MontageReviver = exports.MontageReviver = Montage.specialize(/** @lends Mont
                     this._moduleContexts.set(this._locationId, context);
                 }
                 mjsonObjectPromise = MontageReviver.getMontageDeserializer().then(function (MontageDeserializer) {
-                    var deserializer = new MontageDeserializer().initWithObject(
+                    var deserializer = new MontageDeserializer().init(
                         json,
                         MontageDeserializer.getModuleRequire(self._require, moduleId),
                         void 0,
