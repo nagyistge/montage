@@ -63,6 +63,9 @@ var ModuleLoader = Montage.specialize({
         }
     },
 
+    /**
+     * @return {Promise}
+     */
     getModule: {
         value: function (moduleId, label) {
             var objectRequires = this._objectRequires,
@@ -81,7 +84,7 @@ var ModuleLoader = Montage.specialize({
                 module = _require.async(moduleId);
             }
 
-            return module;
+            return Promise.resolve(module);
         }
     }
 });
