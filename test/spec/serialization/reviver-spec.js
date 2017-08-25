@@ -227,15 +227,15 @@ describe("reviver", function() {
                 }
             };
 
-            try {
-                context = new Context().init(serialization, reviver);
-                context.getObjects();
-                fail('Should throw error');
-            } catch (err) {
-                expect(err.message).toBe('Error deserializing {"values":{"name":"a custom1 object"}}, might need "prototype" or "object" on label "object1"');
-            } finally {
-                done();
-            }
+            context = new Context().init(serialization, reviver);
+            context.getObjects()
+                .then(function () {
+                    fail('Should throw error');
+                })
+                .catch(function (err) {
+                    expect(err.message).toBe('Error deserializing {"values":{"name":"a custom1 object"}}, might need "prototype" or "object" on label "object1"');
+                })
+                .finally(done);
         });
 
         it("should deserialize a type of custom object that has an asynchronous revival only once", function(done) {

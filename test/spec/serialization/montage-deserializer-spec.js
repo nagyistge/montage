@@ -149,8 +149,7 @@ describe("serialization/montage-deserializer-spec", function () {
                     simple: simple
                 };
 
-            deserializer.init(
-                serializationString, require);
+            deserializer.init(serializationString, require);
 
             deserializer.deserializeObject(instances).then(function (root) {
                 expect(root.simple).toBe(simple);
@@ -721,7 +720,7 @@ describe("serialization/montage-deserializer-spec", function () {
             deserializer.init(serializationString, require);
             deserializer.deserializeObject().then(function (root) {
                 var info = Montage.getInfoForObject(root);
-                expect(info.moduleId).toBe("core/meta/object-descriptor");
+                expect(info.moduleId).toBe("core/core");
                 expect(info.isInstance).toBe(true);
                 expect(root.type).toBeUndefined();
                 expect(root.name).toBe("RootBlueprint");
@@ -777,7 +776,7 @@ describe("serialization/montage-deserializer-spec", function () {
             deserializer.init(serializationString, require);
             deserializer.deserializeObject().then(function (root) {
                 var info = Montage.getInfoForObject(root);
-                expect(info.moduleId).toBe("core/meta/object-descriptor");
+                expect(info.moduleId).toBe("core/core");
                 expect(info.isInstance).toBe(true);
                 expect(root.type).toBeUndefined();
                 expect(root.name).toBe("RootBlueprint");
