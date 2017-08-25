@@ -254,197 +254,134 @@ var MontageReviver = exports.MontageReviver = Montage.specialize(/** @lends Mont
         }
     },
 
+    /**
+     * @return {Promise}
+     */
     reviveMontageObject: {
         value: function (value, context, label) {
-            var self = this,
-                module,
-                locationDesc,
-                locationId = value.prototype || value.object,
-                objectName;
+            var self = this;
 
-            if (locationId) {
-                locationDesc = MontageReviver.parseObjectLocationId(locationId);
-                module = this.moduleLoader.getModule(locationDesc.moduleId,
-                    label);
-                objectName = locationDesc.objectName;
-            }
-
-            if (Promise.is(module)) {
-                return module.then(function (exports) {
-                    return self.instantiateObject(exports, locationDesc, value, objectName, context, label);
-                }, function (error) {
-                    if (error.stack) {
-                        console.error(error.stack);
-                    }
-                    throw new Error('Error deserializing "' + label +
-                        '" when loading module "' + locationDesc.moduleId +
-                        "' from '" + value.prototype + "' cause: " + error.message);
-                });
-            } else {
-                return this.instantiateObject(module, locationDesc, value, objectName, context, label);
-            }
-        }
-    },
-
-    instantiateObject: {
-        value: function (module, locationDesc, value, objectName, context, label) {
-            var self = this,
-                moduleId = value.prototype || value.object,
-                object;
-
-            if (moduleId && (moduleId.endsWith(".mjson") || moduleId.endsWith(".meta"))) {
-                return this.getMjsonObject(value, module, moduleId, context)
-                    .then(function (object) {
-                        context.setObjectLabel(object, label);
-                        return self.instantiateMjsonObject(value, object, objectName, context, label);
-                    });
-            } else {
-                object = this.getMontageObject(value, module, objectName, context, label);
-                context.setObjectLabel(object, label);
-                return this.instantiateMontageObject(value, object, objectName, context, label);
-            }
-        }
-    },
-
-    getMjsonObject: {
-        value: function (serialization, json, moduleId, context) {
-            var self = this,
-                mjsonObjectPromise;
-            if (moduleId && this._moduleContexts.has(moduleId)) {
-                // We have a circular reference. If we wanted to forbid circular
-                // references this is where we would throw an error.
-                mjsonObjectPromise = Promise.resolve(this._moduleContexts.get(moduleId)._objects.root);
-            } else {
-                if (this._locationId && !this._moduleContexts.has(this._locationId)) {
-                    this._moduleContexts.set(this._locationId, context);
-                }
-                mjsonObjectPromise = MontageReviver.getMontageDeserializer().then(function (MontageDeserializer) {
-                    var deserializer = new MontageDeserializer().init(
-                        json,
-                        MontageDeserializer.getModuleRequire(self._require, moduleId),
-                        void 0,
-                        moduleId,
-                        self._moduleContexts
-                    );
-                    return deserializer.deserializeObject();
-                });
-            }
-            return mjsonObjectPromise.then(function (object) {
-                if ("prototype" in serialization) {
-                    return Object.create(object);
-                } else {
-                    return object;
-                }
-            });
-        }
-    },
-
-    getMontageObject: {
-        value: function (value, module, objectName, context, label) {
-            var object;
-
-            if (context.hasUserObject(label)) {
-
-                return context.getUserObject(label);
-
-            } else if ("prototype" in value) {
-
-                if (!(objectName in module)) {
-                    throw new Error('Error deserializing "' + label +
-                        '": object named "' + objectName + '"' +
-                        ' was not found in "' + value.prototype + '".' +
-                        " Available objects are: " + Object.keys(module) + ".");
-                }
-                // TODO: For now we need this because we need to set
-                // isDeserilizing before calling didCreate.
-                object = Object.create(module[objectName].prototype);
-                object.isDeserializing = true;
-                if (typeof object.didCreate === "function") {
-                    object.didCreate();
-                } else if (typeof object.constructor === "function") {
-                    object.constructor();
-                }
-                return object;
-            } else if ("object" in value) {
-                if (value.object.endsWith(".json")) {
-                    return module;
-                }
-
-                if (!(objectName in module)) {
-                    throw new Error('Error deserializing "' + label +
-                        '": object named "' + object +
-                        "' was not found given '" + value.object + "'");
-                }
-                return module[objectName];
-
-            } else {
-                throw new Error("Error deserializing " + JSON.stringify(value) + ", might need \"prototype\" or \"object\" on label " + JSON.stringify(label));
-            }
-        }
-    },
-
-    instantiateMjsonObject: {
-        value: function (serialization, object, objectName, context, label) {
-            var self = this,
-                montageObjectDesc;
-
-            if (object !== null && object !== void 0) {
-                object.isDeserializing = true;
-            }
-
-            context.setBindingsToDeserialize(object, serialization);
-            montageObjectDesc = this.reviveObjectLiteral(serialization, context);
-
-            if (Promise.is(montageObjectDesc)) {
-                return montageObjectDesc.then(function(montageObjectDesc) {
-                    return self.deserializeMontageObject(montageObjectDesc, object, context, label);
-                });
-            } else {
-                return this.deserializeMontageObject(montageObjectDesc, object, context, label);
-            }
-        }
-    },
-
-    instantiateMontageObject: {
-        value: function (serialization, object, objectName, context, label) {
-            var self = this,
-                montageObjectDesc;
-
-
-            if (object !== null && object !== void 0) {
-                object.isDeserializing = true;
-            }
-
-            if (serialization.bindings) {
-                deprecate.deprecationWarningOnce(
-                    "'bindings' block is deprecated, use 'values' instead"
-                );
-            }
-
-            if (serialization.properties) {
-                deprecate.deprecationWarningOnce(
-                    "'properties' block is deprecated, use 'values' instead"
-                );
-            }
-
-            context.setBindingsToDeserialize(object, serialization);
-            montageObjectDesc = this.reviveObjectLiteral(serialization, context);
-
-            if (Promise.is(montageObjectDesc)) {
-                return montageObjectDesc.then(function(montageObjectDesc) {
-                    if (typeof object.deserializeSelf === "function") {
-                        return self.deserializeCustomMontageObject(object, montageObjectDesc, context, label);
+            return Promise.resolve(value)
+                .then(function (object) {
+                    if (context.hasUserObject(label)) {
+                        return context.getUserObject(label);
                     } else {
-                        return self.deserializeMontageObject(montageObjectDesc, object, context, label);
+                        return self._getMontageObject(value, context, label);
+                    }
+                })
+                .then(function (object) {
+                    context.setObjectLabel(object, label);
+
+                    if (object !== null && object !== void 0) {
+                        object.isDeserializing = true;
+                    }
+
+                    if (value.bindings) {
+                        deprecate.deprecationWarningOnce(
+                            "'bindings' block is deprecated, use 'values' instead"
+                        );
+                    }
+                    if (value.properties) {
+                        deprecate.deprecationWarningOnce(
+                            "'properties' block is deprecated, use 'values' instead"
+                        );
+                    }
+
+                    context.setBindingsToDeserialize(object, value);
+                    return Promise.resolve(self.reviveObjectLiteral(value, context))
+                        .then(function (montageObjectDesc) {
+                            if (typeof object.deserializeSelf === "function") {
+                                return self.deserializeCustomMontageObject(object, montageObjectDesc, context, label);
+                            } else {
+                                return self.deserializeMontageObject(montageObjectDesc, object, context, label);
+                            }
+                        });
+                });
+        }
+    },
+
+    _getMontageObject: {
+        value: function (value, context, label) {
+            var locationId = value.prototype || value.object,
+                locationDesc,
+                objectName;
+            if (!locationId) {
+                return Promise.reject(new Error(
+                    "Error deserializing " + JSON.stringify(value) +
+                    ", might need \"prototype\" or \"object\" on label " +
+                    JSON.stringify(label)
+                ));
+            }
+            locationDesc = MontageReviver.parseObjectLocationId(locationId);
+            objectName = locationDesc.objectName;
+            return this._loadModule(locationDesc, context, label)
+                .then(function (module) {
+                    var object;
+                    if ("prototype" in value) {
+                        object = Object.create(module.prototype || module);
+                        // TODO: For now we need this because we need to set
+                        // isDeserilizing before calling didCreate.
+                        object.isDeserializing = true;
+                        if (typeof object.didCreate === "function") {
+                            object.didCreate();
+                        } else if (typeof object.constructor === "function") {
+                            object.constructor();
+                        }
+                        return object;
+                    } else {
+                        return module;
                     }
                 });
-            } else {
-                if (typeof object.deserializeSelf === "function") {
-                    return this.deserializeCustomMontageObject(object, montageObjectDesc, context, label);
-                } else {
-                    return this.deserializeMontageObject(montageObjectDesc, object, context, label);
-                }
-            }
+        }
+    },
+
+    _loadModule: {
+        value: function (locationDesc, context, label) {
+            var self = this,
+                moduleId = locationDesc.moduleId,
+                objectName = locationDesc.objectName;
+            return this.moduleLoader
+                .getModule(locationDesc.moduleId, label)
+                .then(function (module) {
+                    if (moduleId.endsWith(".mjson") || moduleId.endsWith(".meta")) {
+                        if (moduleId && self._moduleContexts.has(moduleId)) {
+                            // We have a circular reference. If we wanted to forbid circular
+                            // references self is where we would throw an error.
+                            return Promise.resolve(self._moduleContexts.get(moduleId)._objects.root);
+                        } else {
+                            if (self._locationId && !self._moduleContexts.has(self._locationId)) {
+                                self._moduleContexts.set(self._locationId, context);
+                            }
+                            // TODO: Reviver instantiates Deserializer, not very clean.
+                            // Maybe a deserialize module function could be passed in to
+                            // the reviver in its constructor
+                            return Promise.all([
+                                    self.moduleLoader.getModule(moduleId, label),
+                                    MontageReviver.getMontageDeserializer()
+                                ])
+                                .spread(function (module, MontageDeserializer) {
+                                    var deserializer = new MontageDeserializer().init(
+                                        module,
+                                        MontageDeserializer.getModuleRequire(self._require, moduleId),
+                                        void 0,
+                                        moduleId,
+                                        self._moduleContexts
+                                    );
+                                    return deserializer.deserializeObject();
+                                });
+                        }
+                    } else if (moduleId.endsWith(".json")) {
+                        return module;
+                    } else { // JS
+                        if (!(objectName in module)) {
+                            throw new Error('Error deserializing "' + label +
+                                '": object named "' + objectName + '"' +
+                                ' was not found in "' + locationDesc.moduleId + '".' +
+                                " Available objects are: " + Object.keys(module) + ".");
+                        }
+                        return module[objectName];
+                    }
+                });
         }
     },
 
