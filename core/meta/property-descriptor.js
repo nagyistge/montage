@@ -1,5 +1,4 @@
 var Montage = require("../core").Montage,
-    ObjectDescriptorReference = require("./object-descriptor-reference").ObjectDescriptorReference,
     deprecate = require("../deprecate"),
     logger = require("../logger").logger("objectDescriptor");
 
@@ -111,7 +110,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             this._setPropertyWithDefaults(serializer, "collectionValueType", this.collectionValueType);
             this._setPropertyWithDefaults(serializer, "valueObjectPrototypeName", this.valueObjectPrototypeName);
             this._setPropertyWithDefaults(serializer, "valueObjectModuleId", this.valueObjectModuleId);
-            this._setPropertyWithDefaults(serializer, "valueDescriptor", this._valueDescriptorReference);
+            this._setPropertyWithDefaults(serializer, "valueDescriptor", this._valueDescriptor);
             if (this.enumValues.length > 0) {
                 this._setPropertyWithDefaults(serializer, "enumValues", this.enumValues);
             }
@@ -136,7 +135,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             this.collectionValueType = this._getPropertyWithDefaults(deserializer, "collectionValueType");
             this.valueObjectPrototypeName = this._getPropertyWithDefaults(deserializer, "valueObjectPrototypeName");
             this.valueObjectModuleId = this._getPropertyWithDefaults(deserializer, "valueObjectModuleId");
-            this._valueDescriptorReference = this._getPropertyWithDefaults(deserializer, "valueDescriptor", "targetBlueprint");
+            this._valueDescriptor = this._getPropertyWithDefaults(deserializer, "valueDescriptor", "targetBlueprint");
             this.enumValues = this._getPropertyWithDefaults(deserializer, "enumValues");
             this.defaultValue = this._getPropertyWithDefaults(deserializer, "defaultValue");
             this.helpKey = this._getPropertyWithDefaults(deserializer, "helpKey");
@@ -325,11 +324,10 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
     valueDescriptor: {
         serializable: false,
         get: function () {
-            return this._valueDescriptorReference && this._valueDescriptorReference.promise(this.require);
+            return this._valueDescriptor;
         },
         set: function (descriptor) {
-
-            this._valueDescriptorReference = new ObjectDescriptorReference().initWithValue(descriptor);
+            this._valueDescriptor = descriptor;
         }
     },
 
@@ -392,7 +390,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
     // TODO: How to handle these case?
     isAssociationBlueprint: {
         get: deprecate.deprecateMethod(void 0, function () {
-            return !!this._valueDescriptorReference;
+            return !!this._valueDescriptor;
         }, "isAssociationBlueprint", "No analog")
     },
 
@@ -402,7 +400,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
         }, "targetBlueprint.get", "valueDescriptor.get"),
         set: deprecate.deprecateMethod(void 0, function (value) {
             this.valueDescriptor = value;
-        }, "targetBlueprint.get", "valueDescriptor.set")
+        }, "targetBlueprint.set", "valueDescriptor.set")
     },
 
     blueprintDescriptorModuleId: require("../core")._objectDescriptorModuleIdDescriptor,

@@ -2,7 +2,6 @@ var Montage = require("../core").Montage,
     DerivedDescriptor = require("./derived-descriptor").DerivedDescriptor,
     EventDescriptor = require("./event-descriptor").EventDescriptor,
     ModelModule = require("./model"),
-    ObjectDescriptorReference = require("./object-descriptor-reference").ObjectDescriptorReference,
     Promise = require("../promise").Promise,
     PropertyDescriptor = require("./property-descriptor").PropertyDescriptor,
     PropertyValidationRule = require("./validation-rule").PropertyValidationRule,
@@ -313,7 +312,7 @@ var ObjectDescriptor = exports.ObjectDescriptor = Montage.specialize( /** @lends
 
     /**
      * Blueprint parent
-     * @returns {?ObjectDescriptorReference}
+     * @type {?ObjectDescriptor}
      */
     parent: {
         serializable: false,

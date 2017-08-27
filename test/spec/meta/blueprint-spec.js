@@ -19,8 +19,6 @@ var logger = require("montage/core/logger").logger("./blueprint-spec.js");
 // Require to deserialize
 // TODO add proper deps to montage modules
 require('montage/core/meta/object-descriptor');
-require('montage/core/meta/object-descriptor-reference');
-require('montage/core/meta/blueprint-reference');
 require('montage/core/meta/property-blueprint');
 require('montage/core/meta/module-blueprint');
 
@@ -77,21 +75,15 @@ describe("meta/blueprint-spec", function () {
                 expect(personBlueprint.propertyDescriptorForName("employer")).toBe(employerAssociation);
                 expect(companyBlueprint.propertyDescriptorForName("employees")).toBe(employeesAssociation);
             });
-            it("target blueprint promise to be resolved", function (done) {
-                personBlueprint.propertyDescriptorForName("employer").valueDescriptor.then(function (blueprint) {
-                    expect(blueprint).toBeTruthy();
-                    expect(blueprint).toBe(companyBlueprint);
-                }).finally(function () {
-                    done();
-                });
+            it("target objectDescriptor promise to be resolved", function () {
+                var objectDescriptor = personBlueprint.propertyDescriptorForName("employer").valueDescriptor;
+                expect(objectDescriptor).toBeTruthy();
+                expect(objectDescriptor).toBe(companyBlueprint);
             });
-            it("target blueprint promise to be resolved", function (done) {
-                companyBlueprint.propertyDescriptorForName("employees").valueDescriptor.then(function (blueprint) {
-                    expect(blueprint).toBeTruthy();
-                    expect(blueprint).toBe(personBlueprint);
-                }).finally(function () {
-                    done();
-                });
+            it("target objectDescriptor promise to be resolved", function () {
+                var objectDescriptor = companyBlueprint.propertyDescriptorForName("employees").valueDescriptor;
+                expect(objectDescriptor).toBeTruthy();
+                expect(objectDescriptor).toBe(personBlueprint);
             });
         });
         describe("blueprint to instance association", function () {
